@@ -1,55 +1,60 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
+import { Controller, SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
+import { DatePickerField } from "../components/DatePickerField";
 import { InputField } from "../components/InputField";
 import { NavigationButton } from "../components/NavigationButton";
 import { useCVContext } from "../context/CVContext";
+import {
+  experienceSchema,
+  ExperienceFormValues,
+} from "../schemas/experience.schema";
+import { calendarDateFromString, formatCalendarDate } from "../utils/date";
 import { Experience } from "../types/cv.types";
+import { Colors } from "../theme/colors";
+
+const initialValues: ExperienceFormValues = {
+  company: "",
+  position: "",
+  startDate: "",
+  endDate: "",
+  description: "",
+};
 
 export default function ExperienceScreen() {
   const router = useRouter();
   const { cvData, addExperience, deleteExperience } = useCVContext();
-
-  const [formData, setFormData] = useState<Omit<Experience, "id">>({
-    company: "",
-    position: "",
-    startDate: "",
-    endDate: "",
-    description: "",
+  const idPrefix = useId();
+  const [nextRecordNumber, setNextRecordNumber] = useState(0);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ExperienceFormValues>({
+    resolver: zodResolver(experienceSchema),
+    defaultValues: initialValues,
   });
+  const startDate = useWatch({ control, name: "startDate" });
+  const endDate = useWatch({ control, name: "endDate" });
 
-  const handleAdd = () => {
-    if (!formData.company || !formData.position || !formData.startDate) {
-      Alert.alert(
-        "Error",
-        "Por favor completa al menos empresa, cargo y fecha de inicio"
-      );
-      return;
-    }
-
+  const onValidSubmit: SubmitHandler<ExperienceFormValues> = (values) => {
     const newExperience: Experience = {
-      id: Date.now().toString(),
-      ...formData,
+      id: `${idPrefix}-${nextRecordNumber}`,
+      ...values,
     };
-
     addExperience(newExperience);
-
-    // Limpiar formulario
-    setFormData({
-      company: "",
-      position: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    });
-
+    setNextRecordNumber((current) => current + 1);
+    reset(initialValues);
     Alert.alert("Éxito", "Experiencia agregada correctamente");
   };
 
@@ -69,47 +74,90 @@ export default function ExperienceScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Agregar Nueva Experiencia</Text>
 
-        <InputField
-          label="Empresa *"
-          placeholder="Nombre de la empresa"
-          value={formData.company}
-          onChangeText={(text) => setFormData({ ...formData, company: text })}
+        <Controller
+          control={control}
+          name="company"
+          render={({ field }) => (
+            <InputField
+              label="Empresa *"
+              placeholder="Nombre de la empresa"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.company?.message}
+            />
+          )}
         />
 
-        <InputField
-          label="Cargo *"
-          placeholder="Tu posición"
-          value={formData.position}
-          onChangeText={(text) => setFormData({ ...formData, position: text })}
+        <Controller
+          control={control}
+          name="position"
+          render={({ field }) => (
+            <InputField
+              label="Cargo *"
+              placeholder="Tu posición"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.position?.message}
+            />
+          )}
         />
 
-        <InputField
-          label="Fecha de Inicio *"
-          placeholder="Ej: Enero 2020"
-          value={formData.startDate}
-          onChangeText={(text) => setFormData({ ...formData, startDate: text })}
+        <Controller
+          control={control}
+          name="startDate"
+          render={({ field }) => (
+            <DatePickerField
+              label="Fecha de Inicio *"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.startDate?.message}
+              placeholder="Selecciona la fecha de inicio"
+              maximumDate={calendarDateFromString(endDate)}
+            />
+          )}
         />
 
-        <InputField
-          label="Fecha de Fin"
-          placeholder="Ej: Diciembre 2023 o 'Actual'"
-          value={formData.endDate}
-          onChangeText={(text) => setFormData({ ...formData, endDate: text })}
+        <Controller
+          control={control}
+          name="endDate"
+          render={({ field }) => (
+            <DatePickerField
+              label="Fecha de Fin"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.endDate?.message}
+              placeholder="Selecciona la fecha de fin"
+              minimumDate={calendarDateFromString(startDate)}
+              optional
+            />
+          )}
         />
 
-        <InputField
-          label="Descripción"
-          placeholder="Describe tus responsabilidades y logros..."
-          value={formData.description}
-          onChangeText={(text) =>
-            setFormData({ ...formData, description: text })
-          }
-          multiline
-          numberOfLines={4}
-          style={{ height: 100, textAlignVertical: "top" }}
+        <Controller
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <InputField
+              label="Descripción"
+              placeholder="Describe tus responsabilidades y logros..."
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              multiline
+              numberOfLines={4}
+              style={{ height: 100, textAlignVertical: "top" }}
+              error={errors.description?.message}
+            />
+          )}
         />
 
-        <NavigationButton title="Agregar Experiencia" onPress={handleAdd} />
+        <NavigationButton
+          title="Agregar Experiencia"
+          onPress={handleSubmit(onValidSubmit)}
+          disabled={isSubmitting}
+        />
 
         {cvData.experiences.length > 0 && (
           <>
@@ -120,10 +168,13 @@ export default function ExperienceScreen() {
                   <Text style={styles.cardTitle}>{exp.position}</Text>
                   <Text style={styles.cardSubtitle}>{exp.company}</Text>
                   <Text style={styles.cardDate}>
-                    {exp.startDate} - {exp.endDate || "Actual"}
+                    {formatCalendarDate(exp.startDate)} -{" "}
+                    {exp.endDate ? formatCalendarDate(exp.endDate) : "Actual"}
                   </Text>
                 </View>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Eliminar experiencia en ${exp.company}`}
                   style={styles.deleteButton}
                   onPress={() => handleDelete(exp.id)}
                 >
@@ -148,7 +199,7 @@ export default function ExperienceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.background,
   },
   content: {
     padding: 20,
@@ -156,23 +207,25 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#2c3e50",
+    color: Colors.primary,
     marginBottom: 16,
   },
   listTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: Colors.primaryDark,
     marginTop: 24,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.cardBackground,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.border,
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     flexDirection: "row",
-    shadowColor: "#000",
+    shadowColor: Colors.dark,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -184,28 +237,28 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: Colors.dark,
     marginBottom: 4,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: "#7f8c8d",
+    color: Colors.textMuted,
     marginBottom: 4,
   },
   cardDate: {
     fontSize: 12,
-    color: "#95a5a6",
+    color: Colors.textMuted,
   },
   deleteButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#e74c3c",
+    backgroundColor: Colors.danger,
     justifyContent: "center",
     alignItems: "center",
   },
   deleteButtonText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 18,
     fontWeight: "bold",
   },

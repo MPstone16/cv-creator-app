@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
@@ -6,19 +6,40 @@ import {
     StyleSheet,
     TextInputProps,
 } from "react-native";
+import { Colors } from "../theme/colors";
 
 interface InputFieldProps extends TextInputProps {
     label: string;
     error?:string;
 }
 
-export const InputField = ({label, error, ...props}: InputFieldProps) => {
+export const InputField = ({
+    label,
+    error,
+    onFocus,
+    onBlur,
+    ...props
+}: InputFieldProps) => {
+    const [isFocused, setIsFocused] = useState(false);
+
     return (
         <View style={styles.container}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
-                style={[styles.input, error && styles.inputError]}
-                placeholderTextColor="#999"
+                style={[
+                    styles.input,
+                    isFocused && styles.inputFocused,
+                    error && styles.inputError,
+                ]}
+                placeholderTextColor={Colors.textMuted}
+                onFocus={(event) => {
+                    setIsFocused(true);
+                    onFocus?.(event);
+                }}
+                onBlur={(event) => {
+                    setIsFocused(false);
+                    onBlur?.(event);
+                }}
                 {...props}
             />
             {error && <Text style={styles.errorText}>{error}</Text>}
@@ -33,22 +54,25 @@ const styles = StyleSheet.create({
     label:{
         fontSize: 16,
         fontWeight:"600",
-        color:"#333",
+        color: Colors.textPrimary,
         marginBottom: 8,
     },
     input:{
         borderWidth:1,
-        borderColor:"#ddd",
+        borderColor: Colors.inputBorder,
         borderRadius:8,
         padding:12,
         fontSize:16,
-        backgroundColor:"#fff"
+        backgroundColor: Colors.cardBackground
+    },
+    inputFocused: {
+        borderColor: Colors.border,
     },
     inputError:{
-        borderColor:"#e74c3c",
+        borderColor: Colors.danger,
     },
     errorText:{
-        color:"#e74c3c",
+        color: Colors.danger,
         fontSize:12,
         marginTop:4,
     },

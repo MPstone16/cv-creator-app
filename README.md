@@ -16,6 +16,26 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+## Form dates
+
+Experience start and end dates are stored as `YYYY-MM-DD` calendar dates and
+displayed in a localized format. The graduation field intentionally stores
+only a year (`YYYY`), matching its label and the existing CV data model; users
+choose from a year list rather than an arbitrary day and month. The native
+date picker is used on iOS and Android, while the web build uses the browser's
+date input.
+
+## Foto de perfil y habilidades
+
+La información personal permite seleccionar una foto de perfil desde la
+galería o tomarla con la cámara. La foto se conserva como URI local durante la
+sesión y se muestra en la vista previa; no se carga a un servidor ni se
+garantiza su persistencia después de cerrar la aplicación.
+
+La pantalla **Habilidades** administra por separado habilidades blandas y
+duras, evita duplicados dentro de cada categoría y refleja los cambios en la
+vista previa del CV.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

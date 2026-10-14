@@ -2,6 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useCVContext } from "@/context/CVContext";
 import { CVPreview } from "@/components/CVPreview";
+import { Colors } from "@/theme/colors";
 
 export default function PreviewScreen(){
     const {cvData}=useCVContext();
@@ -15,6 +16,6 @@ export default function PreviewScreen(){
 const styles = StyleSheet.create({
     container:{
         flex:1,
-        backgroundColor:"#fff",
+        backgroundColor: Colors.cardBackground,
     }
 })

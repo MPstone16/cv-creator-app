@@ -1,15 +1,24 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { CVData, PersonalInfo, Experience, Education } from "../types/cv.types";
+import {
+  CVData,
+  PersonalInfo,
+  Experience,
+  Education,
+  SkillCategory,
+} from "../types/cv.types";
 
 interface CVContextType {
   cvData: CVData;
-  updatePersonalInfo: (info: PersonalInfo) => void;
+  updatePersonalInfo: (info: Omit<PersonalInfo, "photoUri">) => void;
+  updatePhotoUri: (photoUri: string | null) => void;
   addExperience: (exp: Experience) => void;
   updateExperience: (id: string, exp: Experience) => void;
   deleteExperience: (id: string) => void;
   addEducation: (edu: Education) => void;
   updateEducation: (id: string, edu: Education) => void;
   deleteEducation: (id: string) => void;
+  addSkill: (category: SkillCategory, skill: string) => void;
+  deleteSkill: (category: SkillCategory, skill: string) => void;
 }
 
 const CVContext = createContext<CVContextType | undefined>(undefined);
@@ -22,13 +31,26 @@ export const CVProvider = ({ children }: { children: ReactNode }) => {
       phone: "",
       location: "",
       summary: "",
+      photoUri: null,
     },
     experiences: [],
     education: [],
+    softSkills: [],
+    hardSkills: [],
   });
 
-  const updatePersonalInfo = (info: PersonalInfo) => {
-    setCVData((prev) => ({ ...prev, personalInfo: info }));
+  const updatePersonalInfo = (info: Omit<PersonalInfo, "photoUri">) => {
+    setCVData((prev) => ({
+      ...prev,
+      personalInfo: { ...prev.personalInfo, ...info },
+    }));
+  };
+
+  const updatePhotoUri = (photoUri: string | null) => {
+    setCVData((prev) => ({
+      ...prev,
+      personalInfo: { ...prev.personalInfo, photoUri },
+    }));
   };
 
   const addExperience = (exp: Experience) => {
@@ -73,17 +95,50 @@ export const CVProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const addSkill = (category: SkillCategory, skill: string) => {
+    const normalizedSkill = skill.trim();
+    if (!normalizedSkill) {
+      return;
+    }
+
+    const skillsKey = category === "soft" ? "softSkills" : "hardSkills";
+    setCVData((prev) => {
+      const skills = prev[skillsKey];
+      const duplicateExists = skills.some(
+        (existingSkill) =>
+          existingSkill.trim().toLowerCase() === normalizedSkill.toLowerCase(),
+      );
+
+      return duplicateExists
+        ? prev
+        : { ...prev, [skillsKey]: [...skills, normalizedSkill] };
+    });
+  };
+
+  const deleteSkill = (category: SkillCategory, skill: string) => {
+    const skillsKey = category === "soft" ? "softSkills" : "hardSkills";
+    setCVData((prev) => ({
+      ...prev,
+      [skillsKey]: prev[skillsKey].filter(
+        (existingSkill) => existingSkill !== skill,
+      ),
+    }));
+  };
+
   return (
     <CVContext.Provider
       value={{
         cvData,
         updatePersonalInfo,
+        updatePhotoUri,
         addExperience,
         updateExperience,
         deleteExperience,
         addEducation,
         updateEducation,
         deleteEducation,
+        addSkill,
+        deleteSkill,
       }}
     >
       {children}

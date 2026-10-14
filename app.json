@@ -32,6 +32,15 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite acceder a tus fotos para agregarlas a tu currículum.",
+          "cameraPermission": "Permite usar la cámara para tomar tu foto de perfil.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

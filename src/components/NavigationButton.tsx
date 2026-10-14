@@ -1,11 +1,13 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import { Pressable, Text, StyleSheet, ViewStyle } from "react-native";
+import { Colors } from "../theme/colors";
 
 interface NavigationButtonProps {
     title: string;
     onPress: () => void;
     variant?: "primary" | "secondary" | "danger";
     style?: ViewStyle;
+    disabled?: boolean;
 }
 
 export const NavigationButton = ({
@@ -13,19 +15,30 @@ export const NavigationButton = ({
     onPress,
     variant = "primary",
     style,
+    disabled = false,
 }: NavigationButtonProps) =>{
     return (
-        <TouchableOpacity 
-            style={[styles.button, styles[variant], style]}
+        <Pressable
+            style={({ pressed }) => [
+                styles.button,
+                styles[variant],
+                pressed && variant === "primary" && styles.primaryPressed,
+                disabled && styles.disabled,
+                style,
+            ]}
             onPress={onPress}
-            activeOpacity={0.8}
+            disabled={disabled}
+            accessibilityRole="button"
         >
             <Text
-                style={[styles.text, variant ==="secondary" && styles.textSecondary]}
+                style={[
+                    styles.text,
+                    variant === "secondary" && styles.textSecondary,
+                ]}
             >
                 {title}
             </Text>
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 
@@ -37,22 +50,28 @@ const styles = StyleSheet.create({
         marginVertical:8,
     },
     primary:{
-        backgroundColor:"#3498db", 
+        backgroundColor: Colors.primary,
+    },
+    primaryPressed: {
+        backgroundColor: Colors.primaryDark,
     },
     secondary:{
-        backgroundColor:"tranparent",
+        backgroundColor:"transparent",
         borderWidth:2,
-        borderColor:"#3498db",
+        borderColor: Colors.border,
     },
     danger:{
-        backgroundColor:"#e74c3c",
+        backgroundColor: Colors.danger,
+    },
+    disabled:{
+        opacity:0.6,
     },
     text:{
-        color:"#fff",
+        color: Colors.white,
         fontSize:16,
         fontWeight:"600",
     },
     textSecondary:{
-        color: "#3498db",
+        color: Colors.primary,
     }
 })

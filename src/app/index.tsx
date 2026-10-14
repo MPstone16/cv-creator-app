@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { useCVContext } from "../context/CVContext";
+import { Colors } from "../theme/colors";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function HomeScreen() {
     cvData.personalInfo.fullName && cvData.personalInfo.email;
   const hasExperience = cvData.experiences.length > 0;
   const hasEducation = cvData.education.length > 0;
+  const skillCount = cvData.softSkills.length + cvData.hardSkills.length;
 
   return (
     <View style={styles.container}>
@@ -20,7 +22,12 @@ export default function HomeScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>1. Información Personal</Text>
-        <Text style={styles.status}>
+        <Text
+          style={[
+            styles.status,
+            isPersonalInfoComplete && styles.statusComplete,
+          ]}
+        >
           {isPersonalInfoComplete ? "✓ Completado" : "Pendiente"}
         </Text>
         <TouchableOpacity
@@ -33,7 +40,9 @@ export default function HomeScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>2. Experiencia</Text>
-        <Text style={styles.status}>
+        <Text
+          style={[styles.status, hasExperience && styles.statusComplete]}
+        >
           {hasExperience
             ? `✓ ${cvData.experiences.length} agregada(s)`
             : "Pendiente"}
@@ -48,7 +57,9 @@ export default function HomeScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>3. Educación</Text>
-        <Text style={styles.status}>
+        <Text
+          style={[styles.status, hasEducation && styles.statusComplete]}
+        >
           {hasEducation
             ? `✓ ${cvData.education.length} agregada(s)`
             : "Pendiente"}
@@ -61,12 +72,27 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>4. Habilidades</Text>
+        <Text
+          style={[styles.status, skillCount > 0 && styles.statusComplete]}
+        >
+          {skillCount > 0 ? `✓ ${skillCount} agregada(s)` : "Pendiente"}
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/skills")}
+        >
+          <Text style={styles.buttonText}>Agregar</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={{ marginTop: 30 }}>
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#2ecc71" }]}
+          style={styles.previewButton}
           onPress={() => router.push("/preview")}
         >
-          <Text style={styles.buttonText}>Ver Vista Previa del CV</Text>
+          <Text style={styles.previewButtonText}>Ver Vista Previa del CV</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -77,16 +103,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.background,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    color: "#2c3e50",
+    color: Colors.primary,
   },
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.cardBackground,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.border,
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
@@ -94,21 +122,40 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: Colors.primaryDark,
     marginBottom: 8,
   },
   status: {
     fontSize: 14,
-    color: "#27ae60",
+    color: Colors.textMuted,
     marginBottom: 12,
+    alignSelf: "flex-start",
+  },
+  statusComplete: {
+    color: Colors.dark,
+    backgroundColor: Colors.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   button: {
-    backgroundColor: "#3498db",
+    backgroundColor: Colors.primary,
     padding: 16,
     borderRadius: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: Colors.white,
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "600",
+  },
+  previewButton: {
+    backgroundColor: Colors.accent,
+    padding: 16,
+    borderRadius: 8,
+  },
+  previewButtonText: {
+    color: Colors.dark,
     fontSize: 16,
     textAlign: "center",
     fontWeight: "600",

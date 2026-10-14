@@ -1,52 +1,56 @@
-// app/education.tsx
-
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { InputField } from "../components/InputField";
 import { NavigationButton } from "../components/NavigationButton";
+import { YearPickerField } from "../components/YearPickerField";
 import { useCVContext } from "../context/CVContext";
+import {
+  educationSchema,
+  EducationFormValues,
+} from "../schemas/education.schema";
 import { Education } from "../types/cv.types";
+import { Colors } from "../theme/colors";
+
+const initialValues: EducationFormValues = {
+  institution: "",
+  degree: "",
+  field: "",
+  graduationYear: "",
+};
 
 export default function EducationScreen() {
   const router = useRouter();
   const { cvData, addEducation, deleteEducation } = useCVContext();
-
-  const [formData, setFormData] = useState<Omit<Education, "id">>({
-    institution: "",
-    degree: "",
-    field: "",
-    graduationYear: "",
+  const idPrefix = useId();
+  const [nextRecordNumber, setNextRecordNumber] = useState(0);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<EducationFormValues>({
+    resolver: zodResolver(educationSchema),
+    defaultValues: initialValues,
   });
 
-  const handleAdd = () => {
-    if (!formData.institution || !formData.degree) {
-      Alert.alert("Error", "Por favor completa al menos institución y título");
-      return;
-    }
-
+  const onValidSubmit: SubmitHandler<EducationFormValues> = (values) => {
     const newEducation: Education = {
-      id: Date.now().toString(),
-      ...formData,
+      id: `${idPrefix}-${nextRecordNumber}`,
+      ...values,
     };
-
     addEducation(newEducation);
-
-    // Limpiar formulario
-    setFormData({
-      institution: "",
-      degree: "",
-      field: "",
-      graduationYear: "",
-    });
-
+    setNextRecordNumber((current) => current + 1);
+    reset(initialValues);
     Alert.alert("Éxito", "Educación agregada correctamente");
   };
 
@@ -66,40 +70,70 @@ export default function EducationScreen() {
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Agregar Nueva Educación</Text>
 
-        <InputField
-          label="Institución *"
-          placeholder="Nombre de la universidad/institución"
-          value={formData.institution}
-          onChangeText={(text) =>
-            setFormData({ ...formData, institution: text })
-          }
+        <Controller
+          control={control}
+          name="institution"
+          render={({ field }) => (
+            <InputField
+              label="Institución *"
+              placeholder="Nombre de la universidad/institución"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.institution?.message}
+            />
+          )}
         />
 
-        <InputField
-          label="Título/Grado *"
-          placeholder="Ej: Licenciatura, Maestría"
-          value={formData.degree}
-          onChangeText={(text) => setFormData({ ...formData, degree: text })}
+        <Controller
+          control={control}
+          name="degree"
+          render={({ field }) => (
+            <InputField
+              label="Título/Grado *"
+              placeholder="Ej: Licenciatura, Maestría"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.degree?.message}
+            />
+          )}
         />
 
-        <InputField
-          label="Área de Estudio"
-          placeholder="Ej: Ingeniería en Sistemas"
-          value={formData.field}
-          onChangeText={(text) => setFormData({ ...formData, field: text })}
+        <Controller
+          control={control}
+          name="field"
+          render={({ field }) => (
+            <InputField
+              label="Área de Estudio"
+              placeholder="Ej: Ingeniería en Sistemas"
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.field?.message}
+            />
+          )}
         />
 
-        <InputField
-          label="Año de Graduación"
-          placeholder="Ej: 2023"
-          value={formData.graduationYear}
-          onChangeText={(text) =>
-            setFormData({ ...formData, graduationYear: text })
-          }
-          keyboardType="numeric"
+        <Controller
+          control={control}
+          name="graduationYear"
+          render={({ field }) => (
+            <YearPickerField
+              label="Año de Graduación"
+              placeholder="Selecciona el año"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.graduationYear?.message}
+            />
+          )}
         />
 
-        <NavigationButton title="Agregar Educación" onPress={handleAdd} />
+        <NavigationButton
+          title="Agregar Educación"
+          onPress={handleSubmit(onValidSubmit)}
+          disabled={isSubmitting}
+        />
 
         {cvData.education.length > 0 && (
           <>
@@ -108,11 +142,17 @@ export default function EducationScreen() {
               <View key={edu.id} style={styles.card}>
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{edu.degree}</Text>
-                  <Text style={styles.cardSubtitle}>{edu.field}</Text>
+                  {edu.field !== "" && (
+                    <Text style={styles.cardSubtitle}>{edu.field}</Text>
+                  )}
                   <Text style={styles.cardInstitution}>{edu.institution}</Text>
-                  <Text style={styles.cardDate}>{edu.graduationYear}</Text>
+                  {edu.graduationYear !== "" && (
+                    <Text style={styles.cardDate}>{edu.graduationYear}</Text>
+                  )}
                 </View>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Eliminar educación en ${edu.institution}`}
                   style={styles.deleteButton}
                   onPress={() => handleDelete(edu.id)}
                 >
@@ -137,7 +177,7 @@ export default function EducationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.background,
   },
   content: {
     padding: 20,
@@ -145,23 +185,25 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#2c3e50",
+    color: Colors.primary,
     marginBottom: 16,
   },
   listTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: Colors.primaryDark,
     marginTop: 24,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.cardBackground,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.border,
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     flexDirection: "row",
-    shadowColor: "#000",
+    shadowColor: Colors.dark,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -173,33 +215,33 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: Colors.dark,
     marginBottom: 4,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: "#7f8c8d",
+    color: Colors.textMuted,
     marginBottom: 4,
   },
   cardInstitution: {
     fontSize: 14,
-    color: "#95a5a6",
+    color: Colors.textMuted,
     marginBottom: 2,
   },
   cardDate: {
     fontSize: 12,
-    color: "#95a5a6",
+    color: Colors.textMuted,
   },
   deleteButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#e74c3c",
+    backgroundColor: Colors.danger,
     justifyContent: "center",
     alignItems: "center",
   },
   deleteButtonText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 18,
     fontWeight: "bold",
   },

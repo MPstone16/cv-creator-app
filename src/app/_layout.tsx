@@ -1,5 +1,6 @@
 import {Stack} from "expo-router";
 import { CVProvider } from "@/context/CVContext";
+import { Colors } from "@/theme/colors";
 
 export default function RootLayout() {
   return (
@@ -7,11 +8,12 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle:{
-            backgroundColor:"#3498db",
+            backgroundColor: Colors.primary,
           },
-          headerTintColor:"#fff",
+          headerTintColor: Colors.white,
           headerTitleStyle:{
             fontWeight:"bold",
+            color: Colors.white,
           },
         }}
       >
@@ -38,6 +40,12 @@ export default function RootLayout() {
           name="education"
           options={{
             title:"Educación",
+          }}
+        />
+        <Stack.Screen
+          name="skills"
+          options={{
+            title:"Habilidades",
           }}
         />
         <Stack.Screen
