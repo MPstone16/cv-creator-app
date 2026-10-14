@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  ScrollView,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useCVContext } from "../context/CVContext";
 import { Colors } from "../theme/colors";
@@ -17,7 +23,10 @@ export default function HomeScreen() {
   const skillCount = cvData.softSkills.length + cvData.hardSkills.length;
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.title}>Crea tu CV Profesional</Text>
 
       <View style={styles.section}>
@@ -95,15 +104,17 @@ export default function HomeScreen() {
           <Text style={styles.previewButtonText}>Ver Vista Previa del CV</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: Colors.background,
+  },
+  content: {
+    padding: 20,
   },
   title: {
     fontSize: 24,
