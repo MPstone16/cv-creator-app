@@ -1,98 +1,116 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
+import { useCVContext } from "../context/CVContext";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { cvData } = useCVContext();
+
+  console.log("CV Data cargado:", cvData); // Para debugging
+
+  const isPersonalInfoComplete =
+    cvData.personalInfo.fullName && cvData.personalInfo.email;
+  const hasExperience = cvData.experiences.length > 0;
+  const hasEducation = cvData.education.length > 0;
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Crea tu CV Profesional</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>1. Información Personal</Text>
+        <Text style={styles.status}>
+          {isPersonalInfoComplete ? "✓ Completado" : "Pendiente"}
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/personal-info")}
+        >
+          <Text style={styles.buttonText}>Editar</Text>
+        </TouchableOpacity>
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>2. Experiencia</Text>
+        <Text style={styles.status}>
+          {hasExperience
+            ? `✓ ${cvData.experiences.length} agregada(s)`
+            : "Pendiente"}
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/experience")}
+        >
+          <Text style={styles.buttonText}>Agregar</Text>
+        </TouchableOpacity>
+      </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>3. Educación</Text>
+        <Text style={styles.status}>
+          {hasEducation
+            ? `✓ ${cvData.education.length} agregada(s)`
+            : "Pendiente"}
+        </Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/education")}
+        >
+          <Text style={styles.buttonText}>Agregar</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ marginTop: 30 }}>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#2ecc71" }]}
+          onPress={() => router.push("/preview")}
+        >
+          <Text style={styles.buttonText}>Ver Vista Previa del CV</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    padding: 20,
+    backgroundColor: "#f5f5f5",
   },
   title: {
-    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#2c3e50",
   },
-  code: {
-    textTransform: 'uppercase',
+  section: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: 8,
+  },
+  status: {
+    fontSize: 14,
+    color: "#27ae60",
+    marginBottom: 12,
+  },
+  button: {
+    backgroundColor: "#3498db",
+    padding: 16,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "600",
   },
 });
