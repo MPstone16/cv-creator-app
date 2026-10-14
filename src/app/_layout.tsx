@@ -41,12 +41,6 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="education"
-          options={{
-            title:"Educación",
-          }}
-        />
-        <Stack.Screen
           name="preview"
           options={{
             title:"Vista Previa",
